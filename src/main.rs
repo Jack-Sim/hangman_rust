@@ -1,11 +1,13 @@
 use std::env;
 use std::process;
 use std::fs;
+use rand::Rng;
 
 mod print_hangman;
 mod misc;
 
 fn main() {
+    let mut rng = rand::thread_rng();
     let args: Vec<String> = env::args().collect();
     
     let arguments = misc::Arguments::new(&args).unwrap_or_else(
@@ -27,6 +29,9 @@ fn main() {
     let wordlist_vec: Vec<&str> = split.collect();
     println!("{}", wordlist_vec.len());
 
+    // Select a random word from the wordlist
+    let index_val = rng.gen_range(0, wordlist_vec.len());
+    println!("The {} word in the list is {}", index_val, wordlist_vec[index_val]);
 
     print_hangman::print_hangman(5i32);
     //print_hangman::print_hangman(3i32);
