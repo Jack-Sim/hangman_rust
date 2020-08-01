@@ -1,10 +1,20 @@
 use std::env;
 use std::process;
 use std::fs;
+use std::iter;
+
 use rand::Rng;
 
 mod print_hangman;
 mod misc;
+
+struct Game {
+    lives: i32,
+    letters_guessed: String,
+    word_to_guess: String,
+    masked_word: String,
+}
+
 
 fn main() {
     let mut rng = rand::thread_rng();
@@ -23,22 +33,35 @@ fn main() {
         }
     );
     
+    // Read in a wordlist file
     let wordlist_raw = fs::read_to_string(arguments.filename)
         .expect("Something went wrong reading the file");
     let split = wordlist_raw.split("\n");
     let wordlist_vec: Vec<&str> = split.collect();
-    println!("{}", wordlist_vec.len());
 
     // Select a random word from the wordlist
     let index_val = rng.gen_range(0, wordlist_vec.len());
-    println!("The {} word in the list is {}", index_val, wordlist_vec[index_val]);
+    let selected_word = wordlist_vec[index_val];
+    println!("The {} word in the list is {}", index_val, selected_word);
 
-    print_hangman::print_hangman(5i32);
-    //print_hangman::print_hangman(3i32);
-    //print_hangman::print_hangman(2i32);
-    //print_hangman::print_hangman(1i32);
-    //print_hangman::print_hangman(0i32);
-    //print_hangman::print_hangman(7i32);
+    // Mask the string as a String of "-"
+    let mut masked_word = iter::repeat("-").take(selected_word.len()).collect::<String>();
+    println!("{}", masked_word);
+
+    let mut current_game = Game {
+        lives: 6i32,
+        letters_guessed: String::from(""),
+        word_to_guess: String::from(selected_word),
+        masked_word: masked_word,
+    };
+
+    println!("lives: {}
+            \n letters guessed: {}
+            \n word to guess: {}
+            \n masked_word: {}", current_game.lives, current_game.letters_guessed,
+        current_game.word_to_guess, current_game.masked_word);
+
+    print_hangman::print_hangman(current_game.lives);
 
 }
 
