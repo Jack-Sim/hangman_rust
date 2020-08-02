@@ -2,6 +2,7 @@ use std::env;
 use std::process;
 use std::fs;
 use std::iter;
+use std::io;
 
 use rand::Rng;
 
@@ -13,6 +14,7 @@ struct Game {
     letters_guessed: String,
     word_to_guess: String,
     masked_word: String,
+    remaining_letters: String,
 }
 
 
@@ -42,26 +44,78 @@ fn main() {
     // Select a random word from the wordlist
     let index_val = rng.gen_range(0, wordlist_vec.len());
     let selected_word = wordlist_vec[index_val];
-    println!("The {} word in the list is {}", index_val, selected_word);
 
     // Mask the string as a String of "-"
-    let mut masked_word = iter::repeat("-").take(selected_word.len()).collect::<String>();
-    println!("{}", masked_word);
+    let masked_word = iter::repeat("-").take(selected_word.len()).collect::<String>();
 
     let mut current_game = Game {
         lives: 6i32,
         letters_guessed: String::from(""),
         word_to_guess: String::from(selected_word),
         masked_word: masked_word,
+        remaining_letters: String::from("a b c d e f g h i j k l m n o p q r s t u v w x y z"),
     };
+    
+    // Main game loop
+    while current_game.lives > 0 && current_game.masked_word != current_game.word_to_guess {
+        
+        println!("You have {} lives remaining", current_game.lives);
+        print_hangman::print_hangman(current_game.lives);
+        println!("{}", current_game.masked_word);
+        println!("Remaining letters to choose from: {}", current_game.remaining_letters);
+        println!("Please guess a letter:");
+        let mut guess = String::new();
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Failed to read line");
+        guess = guess.replace("\n", "");
+        // Clear the terminal
+        print!("{}[2J", 27 as char);
 
-    println!("lives: {}
-            \n letters guessed: {}
-            \n word to guess: {}
-            \n masked_word: {}", current_game.lives, current_game.letters_guessed,
-        current_game.word_to_guess, current_game.masked_word);
+        // Process guess
+        if guess.len() > 1 || guess.len() == 0 {
+            println!("Invalid guess, enter single character");
+        } else if current_game.letters_guessed.contains(&guess) {
+            println!("Invalid guess, you've already tried that letter");
+        } else if current_game.word_to_guess.contains(&guess){
+            println!("Your guess, {}, is in the word", guess);
+            current_game.masked_word = String::new();
+            current_game.letters_guessed.push_str(&guess);
+            
+            for c in current_game.word_to_guess.chars() {
+                if current_game.letters_guessed.contains(c){
+                    current_game.masked_word.push(c);
+                } else {
+                    current_game.masked_word.push('-');
+                }
+            }
+        } else {
+            println!("Your guess, {}, is not in the word", guess);
+            current_game.letters_guessed.push_str(&guess);
+            current_game.lives -= 1;
+        }
+        
+    }
 
     print_hangman::print_hangman(current_game.lives);
+    if current_game.lives > 0 {
+        println!("Congratulations, you guess the word: {}", current_game.word_to_guess);
+    
+    } else {
+        println!("Better luck next time, the word was: {}", current_game.word_to_guess);
+    }
+    println!("Would you like to play again? (y/n)");
+    let mut play_again = String::new();
+    io::stdin()
+            .read_line(&mut play_again)
+            .expect("Failed to read line");
+    
+    if play_again.contains('y'){
+        main();
+    } else {
+        println!("See you again soon!");
+        process::exit(0);
+    }
 
 }
 
